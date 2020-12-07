@@ -19,7 +19,12 @@ def pred_log(logreg, X_train, y_train, X_test, flag=False):
     :return: A two elements tuple containing the predictions and the weightning matrix
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
-
+    logreg.fit(X_train,y_train)
+    y_pred_log = logreg.predict(X_test) 
+    w_log = logreg.coef_
+    if  flag == True:
+        y_pred_log = logreg.predict_proba(X_test)
+    
     # -------------------------------------------------------------------------
     return y_pred_log, w_log
 
@@ -83,7 +88,22 @@ def cv_kfold(X, y, C, penalty, K, mode):
             for train_idx, val_idx in kf.split(X, y):
                 x_train, x_val = X.iloc[train_idx], X.iloc[val_idx]
         # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
+                y_train, y_val = y[train_idx], y[val_idx]
+                x_train = nsd(x_train, mode = mode)
+                x_val = nsd(x_val, mode = mode)
+                y_prob,w = pred_log(logreg,x_train,y_train,x_val,flag = True)
+                loss_val_vec[k] = log_loss(y_val,y_prob)
+                k += 1
+                
+            temp_dict = {}
+            temp_dict['C'] = c
+            temp_dict['penalty'] = p
+            temp_dict['mu'] = loss_val_vec.mean()
+            temp_dict['sigma'] = loss_val_vec.std()
+            validation_dict.append(temp_dict)
 
+
+                
         # --------------------------------------------------------------------------
     return validation_dict
 
@@ -98,7 +118,14 @@ def odds_ratio(w, X, selected_feat='LB'):
              odds_ratio: the odds ratio of the selected feature and label
     """
     # ------------------ IMPLEMENT YOUR CODE HERE:-----------------------------
-
+    w1 = w[0]
+    t = X.columns.get_loc(selected_feat)
+    odd_ratio = np.exp(w1[t])
+    X = X.to_numpy()
+    odds_temp = np.exp(X@w1)
+    odds = np.median(odds_temp)
+    
+    
     # --------------------------------------------------------------------------
 
     return odds, odd_ratio
